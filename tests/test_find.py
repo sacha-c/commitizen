@@ -12,9 +12,22 @@ def repo_dir(request):
     return Path('tests', request.param)
 
 
-def test_find_template(repo_dir):
+@pytest.mark.parametrize(
+    "repo_name,envvars,expected",
+    [
+        ("fake-repo-pre", {}, '{{cookiecutter.repo_name}}'),
+        (
+            "fake-repo-pre2",
+            {'variable_start_string': '{%{', 'variable_end_string': '}%}'},
+            '{%{cookiecutter.repo_name}%}',
+        ),
+    ],
+)
+def test_find_template(repo_name, envvars, expected):
     """Verify correctness of `find.find_template` path detection."""
-    template = find.find_template(repo_dir=repo_dir)
+    repo_dir = Path('tests', repo_name)
 
-    test_dir = Path(repo_dir, '{{cookiecutter.repo_name}}')
+    template = find.find_template(repo_dir, envvars)
+
+    test_dir = Path(repo_dir, expected)
     assert template == test_dir
